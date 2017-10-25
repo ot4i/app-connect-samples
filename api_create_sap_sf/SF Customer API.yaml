@@ -1,0 +1,148 @@
+$integration: 'http://ibm.com/appconnect/integration/v2/integrationFile'
+integration:
+  type: api
+  trigger-interfaces:
+    trigger-interface-1:
+      triggers:
+        createCustomer:
+          assembly:
+            $ref: '#/integration/assemblies/assembly-1'
+          input-context:
+            data: Customer
+          output-context:
+            data: Customer
+        retrieveCustomer:
+          assembly:
+            $ref: '#/integration/assemblies/assembly-2'
+          input-context:
+            data: Customer
+          output-context:
+            data: Customer
+      options:
+        resources:
+          - business-object: Customer
+            model:
+              $ref: '#/models/Customer'
+            triggers:
+              create: createCustomer
+              retrieve: retrieveCustomer
+  action-interfaces:
+    action-interface-1:
+      type: api-action
+      business-object: Contact
+      connector-type: salesforce
+      actions:
+        CREATE: {}
+    action-interface-2:
+      type: api-action
+      business-object: contact
+      connector-type: salesforce
+      actions:
+        RETRIEVEALL: {}
+  assemblies:
+    assembly-1:
+      assembly:
+        execute:
+          - create-action:
+              name: Salesforce Create Contact
+              target:
+                $ref: '#/integration/action-interfaces/action-interface-1'
+              map:
+                $map: 'http://ibm.com/appconnect/map/v1'
+                mappings:
+                  - Id:
+                      template: '{{$Request.CustomerID}}'
+                  - LastName:
+                      template: '{{$Request.LastName}}'
+                  - FirstName:
+                      template: '{{$Request.FirstName}}'
+                  - Email:
+                      template: '{{$Request.Email_Address}}'
+                input:
+                  - variable: Request
+                    $ref: '#/trigger/payload'
+          - response:
+              name: response-1
+              reply-maps:
+                - title: Customer successfully created
+                  status-code: 201
+                  map:
+                    $map: 'http://ibm.com/appconnect/map/v1'
+                    mappings:
+                      - CustomerID:
+                          template: '{{$SalesforceCreateContact.Id}}'
+                      - FirstName:
+                          template: '{{$Request.FirstName}}'
+                      - LastName:
+                          template: '{{$Request.LastName}}'
+                      - Email_Address:
+                          template: '{{$Request.Email_Address}}'
+                    input:
+                      - variable: Request
+                        $ref: '#/trigger/payload'
+                      - variable: SalesforceCreateContact
+                        $ref: >-
+                          #/node-output/Salesforce Create
+                          Contact/response/payload
+    assembly-2:
+      assembly:
+        execute:
+          - retrieve-action:
+              name: Salesforce Retrieve Contact
+              target:
+                $ref: '#/integration/action-interfaces/action-interface-2'
+              filter:
+                input:
+                  - variable: api
+                    $ref: '#/trigger/api/parameters'
+                where:
+                  Id: '{{$api.CustomerID}}'
+          - response:
+              name: response-1
+              reply-maps:
+                - title: Customer successfully retrieved
+                  status-code: 200
+                  map:
+                    $map: 'http://ibm.com/appconnect/map/v1'
+                    mappings:
+                      - CustomerID:
+                          template: '{{$api.CustomerID}}'
+                      - FirstName:
+                          template: '{{$SalesforceRetrieveContact.FirstName}}'
+                      - LastName:
+                          template: '{{$SalesforceRetrieveContact.LastName}}'
+                      - Email_Address:
+                          template: '{{$SalesforceRetrieveContact.Email}}'
+                    input:
+                      - variable: api
+                        $ref: '#/trigger/api/parameters'
+                      - variable: SalesforceRetrieveContact
+                        $ref: >-
+                          #/node-output/Salesforce Retrieve
+                          Contact/response/payload
+  name: SF Customer API
+models:
+  Customer:
+    name: Customer
+    properties:
+      CustomerID:
+        type: String
+        required: false
+        id: true
+      FirstName:
+        type: String
+        required: false
+        id: false
+      LastName:
+        type: String
+        required: true
+        id: false
+      Email_Address:
+        type: String
+        required: false
+        id: false
+    plural: Customer
+    description: ' '
+    operations:
+      create: '#/integration/assemblies/assembly-1'
+      retrieve: '#/integration/assemblies/assembly-2'
