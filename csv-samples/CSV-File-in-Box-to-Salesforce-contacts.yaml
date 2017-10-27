@@ -1,0 +1,199 @@
+$integration: 'http://ibm.com/appconnect/integration/v2/integrationFile'
+integration:
+  type: api
+  trigger-interfaces:
+    trigger-interface-1:
+      triggers:
+        createCSVtoSalesforce:
+          assembly:
+            $ref: '#/integration/assemblies/assembly-1'
+          input-context:
+            data: CSVtoSalesforce
+          output-context:
+            data: CSVtoSalesforce
+      options:
+        resources:
+          - business-object: CSVtoSalesforce
+            model:
+              $ref: '#/models/CSVtoSalesforce'
+            triggers:
+              create: createCSVtoSalesforce
+      type: api-trigger
+  action-interfaces:
+    action-interface-1:
+      type: api-action
+      business-object: File
+      connector-type: box
+      actions:
+        RETRIEVEALL: {}
+    action-interface-2:
+      type: api-action
+      business-object: Contact
+      connector-type: salesforce
+      actions:
+        UPSERTWITHWHERE: {}
+  assemblies:
+    assembly-1:
+      assembly:
+        execute:
+          - retrieve-action:
+              name: Box Retrieve file
+              target:
+                $ref: '#/integration/action-interfaces/action-interface-1'
+              filter:
+                where:
+                  id: '{{$split($Request.fileurl, "/")[-1]}}'
+                input:
+                  - variable: Request
+                    $ref: '#/trigger/payload'
+                limit: 1
+              allow-empty-output: false
+              allow-truncation: false
+          - parse:
+              name: CSV Parser Parse
+              parse-format: csv
+              source:
+                template: '{{$BoxRetrievefile.content}}'
+                input:
+                  - variable: Request
+                    $ref: '#/trigger/payload'
+                  - variable: BoxRetrievefile
+                    $ref: '#/node-output/Box Retrieve file/response/payload'
+                  - variable: BoxRetrievefileMetadata
+                    $ref: '#/node-output/Box Retrieve file/response'
+              sample-data: 'FirstName,LastName,Address,City,Postcode,EMail'
+              output-schema:
+                type: array
+                $schema: 'http://json-schema.org/draft-04/schema#'
+                items:
+                  type: object
+                  required:
+                    - FirstName
+                    - LastName
+                    - Address
+                    - City
+                    - Postcode
+                    - EMail
+                  properties:
+                    FirstName:
+                      type: string
+                      minLength: 1
+                    LastName:
+                      type: string
+                      minLength: 1
+                    Address:
+                      type: string
+                      minLength: 1
+                    City:
+                      type: string
+                      minLength: 1
+                    Postcode:
+                      type: string
+                      minLength: 1
+                    EMail:
+                      type: string
+                      minLength: 1
+                title: Parsed CSV
+              options:
+                csv-header: true
+          - for-each:
+              name: For each
+              assembly:
+                $ref: '#/integration/assemblies/assembly-2'
+              source:
+                expression: '$CSVParserParse '
+                input:
+                  - variable: Request
+                    $ref: '#/trigger/payload'
+                  - variable: BoxRetrievefile
+                    $ref: '#/node-output/Box Retrieve file/response/payload'
+                  - variable: BoxRetrievefileMetadata
+                    $ref: '#/node-output/Box Retrieve file/response'
+                  - variable: CSVParserParse
+                    $ref: '#/node-output/CSV Parser Parse/response/payload'
+              mode: parallel
+              continue-on-error: true
+              display-name: CSV Parser Root
+          - response:
+              name: response-1
+              reply-maps:
+                - title: CSVtoSalesforce successfully created
+                  status-code: 201
+                  map:
+                    $map: 'http://ibm.com/appconnect/map/v1'
+                    input:
+                      - variable: Request
+                        $ref: '#/trigger/payload'
+                      - variable: BoxRetrievefile
+                        $ref: '#/node-output/Box Retrieve file/response/payload'
+                      - variable: BoxRetrievefileMetadata
+                        $ref: '#/node-output/Box Retrieve file/response'
+                      - variable: CSVParserParse
+                        $ref: '#/node-output/CSV Parser Parse/response/payload'
+                    mappings:
+                      - fileurl:
+                          template: '{{$Request.fileurl}}'
+                  input: []
+    assembly-2:
+      assembly:
+        execute:
+          - upsert-action:
+              name: Salesforce Update or create Contact
+              target:
+                $ref: '#/integration/action-interfaces/action-interface-2'
+              map:
+                mappings:
+                  - Email:
+                      template: '{{$Foreachitem.EMail}}'
+                  - FirstName:
+                      template: '{{$Foreachitem.FirstName}}'
+                  - LastName:
+                      template: '{{$Foreachitem.LastName}}'
+                  - MailingCity:
+                      template: '{{$Foreachitem.City}}'
+                  - MailingPostalCode:
+                      template: '{{$Foreachitem.Postcode}}'
+                  - MailingStreet:
+                      template: '{{$Foreachitem.Address}}'
+                $map: 'http://ibm.com/appconnect/map/v1'
+                input:
+                  - variable: Foreachitem
+                    $ref: '#/block/For each/current-item'
+                  - variable: Request
+                    $ref: '#/trigger/payload'
+                  - variable: BoxRetrievefile
+                    $ref: '#/node-output/Box Retrieve file/response/payload'
+                  - variable: BoxRetrievefileMetadata
+                    $ref: '#/node-output/Box Retrieve file/response'
+                  - variable: CSVParserParse
+                    $ref: '#/node-output/CSV Parser Parse/response/payload'
+              filter:
+                where:
+                  and:
+                    - FirstName: '{{$Foreachitem.FirstName}}'
+                    - LastName: '{{$Foreachitem.LastName}}'
+                    - Email: '{{$Foreachitem.EMail}}'
+                input:
+                  - variable: Foreachitem
+                    $ref: '#/block/For each/current-item'
+                  - variable: Request
+                    $ref: '#/trigger/payload'
+                  - variable: BoxRetrievefile
+                    $ref: '#/node-output/Box Retrieve file/response/payload'
+                  - variable: BoxRetrievefileMetadata
+                    $ref: '#/node-output/Box Retrieve file/response'
+                  - variable: CSVParserParse
+                    $ref: '#/node-output/CSV Parser Parse/response/payload'
+  name: CSV File in Box to Salesforce contacts
+models:
+  CSVtoSalesforce:
+    name: CSVtoSalesforce
+    properties:
+      fileurl:
+        type: string
+        required: false
+        id: true
+    plural: CSVtoSalesforce
+    description: ' '
+    operations:
+      create: '#/integration/assemblies/assembly-1'
