@@ -191,7 +191,7 @@ models:
     properties:
       fileurl:
         type: string
-        required: false
+        required: true
         id: true
     plural: CSVtoSalesforce
     description: ' '
