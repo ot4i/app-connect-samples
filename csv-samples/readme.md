@@ -11,7 +11,7 @@ You'll find the following resources useful for all of them
 ### CSV file from Box used to add/update contacts to Salesforce
 #### Overview
 In this scenario, an App Connect flow exposes an API that
-allows you to identify a file in box via its file URL.
+allows you to identify a CSV file in [Box](www.box.com) via its file URL.
 The file contains a table of 'contact' details, which is used to
 update contact information in Salesforce.
 
@@ -51,11 +51,11 @@ update contact information in Salesforce.
 #### Flow Details
 ##### Extracting the file ID from the file URL
 
-The flow implements an API that allows the caller to specify a CSV file using its Box URL. The Box file URL is just the URL that you see in your browser URL bar when looking at a box file. The file URL has the general form;
+The flow implements an API that allows the caller to specify a CSV file using its Box URL. The Box file URL is just the URL that you see in your browser URL bar when looking at a Box file. The file URL has the general form;
 ```
 https://app.box.com/file/<file-id>
 ```
-where `<file-id` is a unique number.
+where `<file-id>` is a unique number.
 
 In the sample flow, the `Box` retrieve node is used to retrieve the file contents. It only needs the file identifer - so this is extracted from the URL using a JSONata snippet;
 ```
