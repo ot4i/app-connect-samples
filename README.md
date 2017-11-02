@@ -7,5 +7,5 @@ The intent of these samples is to demonstrate the use of IBM App Connect.  The s
 
 ## Samples list
 
-* [CSV Parser Node Samples](https://github.com/RobPhippen/app-connect-samples/tree/master/csv-samples)
+* [CSV Parser Node Samples](https://github.com/ot4i/app-connect-samples/tree/master/csv-samples)
 > Examples of the use of the CSV Parser node in App Connect flows. Each example comes with a brief description of the scenario covered, and a flow file that implements the scenario.
