@@ -7,5 +7,8 @@ The intent of these samples is to demonstrate the use of IBM App Connect.  The s
 
 ## Samples list
 
+* [Flight Subscription API](https://github.com/ot4i/app-connect-samples/tree/master/Flight%20Subscription%20API)
+> Sample code and snippets that are referenced from the tutorial [Creating an API flow to create SAP OData resources](https://developer.ibm.com/integration/docs/app-connect/how-to-guides-for-apps/how-to-use-ibm-app-connect-with-sap/create-api-flow-create-sap-odata-resources/).
+
 * [CSV Parser Node Samples](https://github.com/ot4i/app-connect-samples/tree/master/csv-samples)
 > Examples of the use of the CSV Parser node in App Connect flows. Each example comes with a brief description of the scenario covered, and a flow file that implements the scenario.
