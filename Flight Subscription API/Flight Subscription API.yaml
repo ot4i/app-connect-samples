@@ -1,0 +1,128 @@
+$integration: 'http://ibm.com/appconnect/integration/v2/integrationFile'
+integration:
+  type: api
+  trigger-interfaces:
+    trigger-interface-1:
+      triggers:
+        createFlightsubscription:
+          assembly:
+            $ref: '#/integration/assemblies/assembly-1'
+          input-context:
+            data: flightsubscription
+          output-context:
+            data: flightsubscription
+      options:
+        resources:
+          - business-object: flightsubscription
+            model:
+              $ref: '#/models/flightsubscription'
+            triggers:
+              create: createFlightsubscription
+  action-interfaces:
+    action-interface-1:
+      type: api-action
+      business-object: SubscriptionCollection
+      connector-type: sapodata
+      actions:
+        CREATE: {}
+    action-interface-2:
+      type: api-action
+      business-object: Contact
+      connector-type: salesforce
+      actions:
+        CREATE: {}
+  assemblies:
+    assembly-1:
+      assembly:
+        execute:
+          - create-action:
+              name: SAP Create SubscriptionCollection
+              target:
+                $ref: '#/integration/action-interfaces/action-interface-1'
+              map:
+                $map: 'http://ibm.com/appconnect/map/v1'
+                mappings:
+                  - deliveryAddress:
+                      template: '{{$Request.deliveryAddress}}'
+                  - collection:
+                      template: FlightCollection
+                  - select:
+                      template: '*'
+                input:
+                  - variable: Request
+                    $ref: '#/trigger/payload'
+          - create-action:
+              name: Salesforce Create Contact
+              target:
+                $ref: '#/integration/action-interfaces/action-interface-2'
+              map:
+                $map: 'http://ibm.com/appconnect/map/v1'
+                mappings:
+                  - LastName:
+                      template: '{{$Request.LastName}}'
+                  - FirstName:
+                      template: '{{$Request.FirstName}}'
+                  - Email:
+                      template: '{{$Request.Email_Address}}'
+                  - Description:
+                      template: >-
+                        Created for SAP subscription
+                        {{$SAPCreateSubscriptionCollection.ID}}
+                input:
+                  - variable: Request
+                    $ref: '#/trigger/payload'
+                  - variable: SAPCreateSubscriptionCollection
+                    $ref: >-
+                      #/node-output/SAP Create
+                      SubscriptionCollection/response/payload
+          - response:
+              name: response-1
+              reply-maps:
+                - title: flightsubscription successfully created
+                  status-code: 201
+                  map:
+                    $map: 'http://ibm.com/appconnect/map/v1'
+                    mappings:
+                      - CustomerID:
+                          template: '{{$SalesforceCreateContact.Id}}'
+                    input:
+                      - variable: Request
+                        $ref: '#/trigger/payload'
+                      - variable: SAPCreateSubscriptionCollection
+                        $ref: >-
+                          #/node-output/SAP Create
+                          SubscriptionCollection/response/payload
+                      - variable: SalesforceCreateContact
+                        $ref: >-
+                          #/node-output/Salesforce Create
+                          Contact/response/payload
+                  input: []
+  name: Flight Subscription API
+models:
+  flightsubscription:
+    name: flightsubscription
+    properties:
+      CustomerID:
+        type: String
+        required: false
+        id: true
+      FirstName:
+        type: String
+        required: false
+        id: false
+      LastName:
+        type: String
+        required: true
+        id: false
+      Email_Address:
+        type: String
+        required: false
+        id: false
+      deliveryAddress:
+        type: String
+        required: false
+        id: false
+    plural: flightsubscription
+    description: ' '
+    operations:
+      create: '#/integration/assemblies/assembly-1'
