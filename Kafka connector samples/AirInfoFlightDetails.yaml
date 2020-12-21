@@ -19,13 +19,11 @@ integration:
               pollingInterval: 5
               isCreatedQueryable: true
       connector-type: salesforce
-      account-name: Account 7
   action-interfaces:
     action-interface-1:
       type: api-action
       business-object: message
       connector-type: kafka
-      account-name: Account 1
       actions:
         CREATE: {}
   assemblies:
