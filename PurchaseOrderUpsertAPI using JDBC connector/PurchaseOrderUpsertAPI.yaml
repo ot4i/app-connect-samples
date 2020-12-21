@@ -1,0 +1,467 @@
+$integration: 'http://ibm.com/appconnect/integration/v2/integrationFile'
+integration:
+  type: api
+  trigger-interfaces:
+    trigger-interface-1:
+      triggers:
+        createPO:
+          assembly:
+            $ref: '#/integration/assemblies/assembly-1'
+          input-context:
+            data: PO
+          output-context:
+            data: PO
+      options:
+        resources:
+          - business-object: PO
+            model:
+              $ref: '#/models/PO'
+            triggers:
+              create: createPO
+      type: api-trigger
+  action-interfaces:
+    action-interface-2:
+      type: api-action
+      business-object: jdbc
+      connector-type: jdbc
+      account-name: DB2 Client Managed
+      actions:
+        EXECUTECUSTOMSQL: {}
+    action-interface-3:
+      type: api-action
+      business-object: jdbc
+      connector-type: jdbc
+      account-name: DB2 Client Managed
+      actions:
+        EXECUTECUSTOMSQL: {}
+    action-interface-5:
+      type: api-action
+      business-object: jdbc
+      connector-type: jdbc
+      account-name: DB2 Client Managed
+      actions:
+        EXECUTECUSTOMSQL: {}
+    action-interface-6:
+      type: api-action
+      business-object: jdbc
+      connector-type: jdbc
+      account-name: DB2 Client Managed
+      actions:
+        EXECUTECUSTOMSQL: {}
+    action-interface-7:
+      type: api-action
+      business-object: jdbc
+      connector-type: jdbc
+      account-name: DB2 Client Managed
+      actions:
+        EXECUTECUSTOMSQL: {}
+    action-interface-1:
+      type: api-action
+      business-object: jdbc
+      connector-type: jdbc
+      account-name: DB2 Client Managed
+      actions:
+        EXECUTECUSTOMSQL: {}
+    action-interface-4:
+      type: api-action
+      business-object: jdbc
+      connector-type: jdbc
+      account-name: DB2 Client Managed
+      actions:
+        EXECUTECUSTOMSQL: {}
+    action-interface-8:
+      type: api-action
+      business-object: jdbc
+      connector-type: jdbc
+      account-name: DB2 Client Managed
+      actions:
+        EXECUTECUSTOMSQL: {}
+  assemblies:
+    assembly-1:
+      assembly:
+        execute:
+          - custom-action:
+              name: JDBC Custom query
+              target:
+                $ref: '#/integration/action-interfaces/action-interface-1'
+              action: EXECUTECUSTOMSQL
+              map:
+                mappings:
+                  - customSql:
+                      format:
+                        type: sql
+                      template: 'select * from porder where orderid= {{$Request.ORDERID}}'
+                $map: 'http://ibm.com/appconnect/map/v1'
+                input:
+                  - variable: Request
+                    $ref: '#/trigger/payload'
+          - if:
+              name: If
+              input:
+                - variable: Request
+                  $ref: '#/trigger/payload'
+                - variable: JDBCCustomquery
+                  $ref: '#/node-output/JDBC Custom query/response/payload'
+              branch:
+                - condition:
+                    '{{$JDBCCustomquery.data}}': '[]'
+                  execute:
+                    - custom-action:
+                        name: JDBC Custom query 2
+                        target:
+                          $ref: '#/integration/action-interfaces/action-interface-2'
+                        action: EXECUTECUSTOMSQL
+                        map:
+                          mappings:
+                            - customSql:
+                                format:
+                                  type: sql
+                                template: >-
+                                  INSERT INTO PORDER (ORDERID, CUSTOMERID,
+                                  SHIP_METHOD, STATUS) VALUES(
+                                  {{$Request.ORDERID}} , {{$Request.CUSTOMERID}}
+                                  , {{$Request.SHIP_METHOD}} ,
+                                  {{$Request.STATUS}}  )
+                          $map: 'http://ibm.com/appconnect/map/v1'
+                          input:
+                            - variable: Request
+                              $ref: '#/trigger/payload'
+                            - variable: JDBCCustomquery
+                              $ref: '#/node-output/JDBC Custom query/response/payload'
+                    - for-each:
+                        name: For each
+                        assembly:
+                          $ref: '#/integration/assemblies/assembly-2'
+                        source:
+                          expression: '$Request.ITEMS '
+                          input:
+                            - variable: Request
+                              $ref: '#/trigger/payload'
+                            - variable: JDBCCustomquery2
+                              $ref: >-
+                                #/block/If/node-output/JDBC Custom query
+                                2/response/payload
+                            - variable: JDBCCustomquery
+                              $ref: '#/node-output/JDBC Custom query/response/payload'
+                        mode: sequential
+                        continue-on-error: true
+                        map:
+                          $map: 'http://ibm.com/appconnect/map/v1'
+                          input:
+                            - variable: Foreachitem
+                              $ref: '#/block/For each/current-item'
+                            - variable: Request
+                              $ref: '#/trigger/payload'
+                            - variable: JDBCCustomquery3
+                              $ref: >-
+                                #/block/For each/node-output/JDBC Custom query
+                                3/response/payload
+                            - variable: JDBCCustomquery2
+                              $ref: >-
+                                #/block/If/node-output/JDBC Custom query
+                                2/response/payload
+                            - variable: JDBCCustomquery
+                              $ref: '#/node-output/JDBC Custom query/response/payload'
+                          mappings: []
+                        display-name: Request ITEMS
+              else:
+                execute:
+                  - custom-action:
+                      name: JDBC Custom query 8
+                      target:
+                        $ref: '#/integration/action-interfaces/action-interface-8'
+                      action: EXECUTECUSTOMSQL
+                      map:
+                        mappings:
+                          - customSql:
+                              format:
+                                type: sql
+                              template: >-
+                                UPDATE PORDER SET CUSTOMERID=
+                                {{$Request.CUSTOMERID}} , SHIP_METHOD=
+                                {{$Request.SHIP_METHOD}} , STATUS=
+                                {{$Request.STATUS}} WHERE ORDERID=
+                                {{$Request.ORDERID}}
+                        $map: 'http://ibm.com/appconnect/map/v1'
+                        input:
+                          - variable: Request
+                            $ref: '#/trigger/payload'
+                          - variable: JDBCCustomquery
+                            $ref: '#/node-output/JDBC Custom query/response/payload'
+                  - for-each:
+                      name: For each 2
+                      assembly:
+                        $ref: '#/integration/assemblies/assembly-3'
+                      source:
+                        expression: '$Request.ITEMS '
+                        input:
+                          - variable: Request
+                            $ref: '#/trigger/payload'
+                          - variable: JDBCCustomquery8
+                            $ref: >-
+                              #/block/If/node-output/JDBC Custom query
+                              8/response/payload
+                          - variable: JDBCCustomquery
+                            $ref: '#/node-output/JDBC Custom query/response/payload'
+                      mode: sequential
+                      continue-on-error: false
+                      map:
+                        $map: 'http://ibm.com/appconnect/map/v1'
+                        input:
+                          - variable: Foreach2item
+                            $ref: '#/block/For each 2/current-item'
+                          - variable: Request
+                            $ref: '#/trigger/payload'
+                          - variable: JDBCCustomquery5
+                            $ref: >-
+                              #/block/For each 2/node-output/JDBC Custom query
+                              5/response/payload
+                          - variable: JDBCCustomquery8
+                            $ref: >-
+                              #/block/If/node-output/JDBC Custom query
+                              8/response/payload
+                          - variable: JDBCCustomquery
+                            $ref: '#/node-output/JDBC Custom query/response/payload'
+                        mappings: []
+                      display-name: Request ITEMS
+              output-schema: {}
+          - custom-action:
+              name: JDBC Custom query 4
+              target:
+                $ref: '#/integration/action-interfaces/action-interface-4'
+              action: EXECUTECUSTOMSQL
+              map:
+                mappings:
+                  - customSql:
+                      format:
+                        type: sql
+                      template: >-
+                        SELECT PORDER.ORDERID , PORDER.CUSTOMERID,
+                        PORDER.SHIP_METHOD , PORDER.STATUS ,
+
+                        POLINE.PRODUCTNAME , POLINE.ITEMNUMBER , POLINE.QUANTITY
+                        , POLINE.PRICE
+
+                        FROM PORDER ,POLINE
+
+                        WHERE  PORDER.ORDERID=POLINE.ORDERID 
+
+                        AND PORDER.ORDERID= {{$Request.ORDERID}}
+                $map: 'http://ibm.com/appconnect/map/v1'
+                input:
+                  - variable: Request
+                    $ref: '#/trigger/payload'
+                  - variable: JDBCCustomquery
+                    $ref: '#/node-output/JDBC Custom query/response/payload'
+          - response:
+              name: response-1
+              reply-maps:
+                - title: PO successfully created
+                  status-code: '201'
+                  map:
+                    $map: 'http://ibm.com/appconnect/map/v1'
+                    input:
+                      - variable: Request
+                        $ref: '#/trigger/payload'
+                      - variable: JDBCCustomquery
+                        $ref: '#/node-output/JDBC Custom query/response/payload'
+                      - variable: JDBCCustomquery4
+                        $ref: '#/node-output/JDBC Custom query 4/response/payload'
+                    mappings:
+                      - ORDERID:
+                          expression: '$JDBCCustomquery4.data '
+                  input:
+                    - variable: Request
+                      $ref: '#/trigger/payload'
+                    - variable: JDBCCustomquery
+                      $ref: '#/node-output/JDBC Custom query/response/payload'
+                    - variable: JDBCCustomquery4
+                      $ref: '#/node-output/JDBC Custom query 4/response/payload'
+    assembly-2:
+      assembly:
+        execute:
+          - custom-action:
+              name: JDBC Custom query 3
+              target:
+                $ref: '#/integration/action-interfaces/action-interface-3'
+              action: EXECUTECUSTOMSQL
+              map:
+                mappings:
+                  - customSql:
+                      format:
+                        type: sql
+                      template: >-
+                        INSERT INTO POLINE (PRODUCTNAME, ITEMNUMBER, QUANTITY,
+                        PRICE, ORDERID) SELECT PRODUCTNAME, ITEMNUMBER,
+                        {{$Foreachitem.QUANTITY}} ,PRICE* 
+                        {{$Foreachitem.QUANTITY}} , {{$Request.ORDERID}} FROM
+                        ITEMS WHERE PRODUCTNAME= {{$Foreachitem.PRODUCTNAME}}
+                $map: 'http://ibm.com/appconnect/map/v1'
+                input:
+                  - variable: Foreachitem
+                    $ref: '#/block/For each/current-item'
+                  - variable: Request
+                    $ref: '#/trigger/payload'
+                  - variable: JDBCCustomquery2
+                    $ref: >-
+                      #/block/If/node-output/JDBC Custom query
+                      2/response/payload
+                  - variable: JDBCCustomquery
+                    $ref: '#/node-output/JDBC Custom query/response/payload'
+    assembly-3:
+      assembly:
+        execute:
+          - custom-action:
+              name: JDBC Custom query 5
+              target:
+                $ref: '#/integration/action-interfaces/action-interface-5'
+              action: EXECUTECUSTOMSQL
+              map:
+                mappings:
+                  - customSql:
+                      format:
+                        type: sql
+                      template: >-
+                        select * from POLINE where PRODUCTNAME =
+                        {{$Foreach2item.PRODUCTNAME}} and ORDERID =
+                        {{$Request.ORDERID}}
+                $map: 'http://ibm.com/appconnect/map/v1'
+                input:
+                  - variable: Foreach2item
+                    $ref: '#/block/For each 2/current-item'
+                  - variable: Request
+                    $ref: '#/trigger/payload'
+                  - variable: JDBCCustomquery8
+                    $ref: >-
+                      #/block/If/node-output/JDBC Custom query
+                      8/response/payload
+                  - variable: JDBCCustomquery
+                    $ref: '#/node-output/JDBC Custom query/response/payload'
+          - if:
+              name: If 2
+              input:
+                - variable: Foreach2item
+                  $ref: '#/block/For each 2/current-item'
+                - variable: Request
+                  $ref: '#/trigger/payload'
+                - variable: JDBCCustomquery5
+                  $ref: >-
+                    #/block/For each 2/node-output/JDBC Custom query
+                    5/response/payload
+                - variable: JDBCCustomquery8
+                  $ref: '#/block/If/node-output/JDBC Custom query 8/response/payload'
+                - variable: JDBCCustomquery
+                  $ref: '#/node-output/JDBC Custom query/response/payload'
+              branch:
+                - condition:
+                    '{{$JDBCCustomquery5.data}}': '[]'
+                  execute:
+                    - custom-action:
+                        name: JDBC Custom query 6
+                        target:
+                          $ref: '#/integration/action-interfaces/action-interface-6'
+                        action: EXECUTECUSTOMSQL
+                        map:
+                          mappings:
+                            - customSql:
+                                format:
+                                  type: sql
+                                template: >-
+                                  INSERT INTO POLINE (PRODUCTNAME, ITEMNUMBER,
+                                  QUANTITY, PRICE, ORDERID) SELECT
+                                  PRODUCTNAME,ITEMNUMBER,
+                                  {{$Foreach2item.QUANTITY}} ,PRICE*
+                                  {{$Foreach2item.QUANTITY}} ,
+                                  {{$Request.ORDERID}} FROM ITEMS WHERE
+                                  PRODUCTNAME= {{$Foreach2item.PRODUCTNAME}}
+                          $map: 'http://ibm.com/appconnect/map/v1'
+                          input:
+                            - variable: Foreach2item
+                              $ref: '#/block/For each 2/current-item'
+                            - variable: Request
+                              $ref: '#/trigger/payload'
+                            - variable: JDBCCustomquery5
+                              $ref: >-
+                                #/block/For each 2/node-output/JDBC Custom query
+                                5/response/payload
+                            - variable: JDBCCustomquery8
+                              $ref: >-
+                                #/block/If/node-output/JDBC Custom query
+                                8/response/payload
+                            - variable: JDBCCustomquery
+                              $ref: '#/node-output/JDBC Custom query/response/payload'
+              else:
+                execute:
+                  - custom-action:
+                      name: JDBC Custom query 7
+                      target:
+                        $ref: '#/integration/action-interfaces/action-interface-7'
+                      action: EXECUTECUSTOMSQL
+                      map:
+                        mappings:
+                          - customSql:
+                              format:
+                                type: sql
+                              template: >-
+                                UPDATE POLINE SET QUANTITY =
+                                {{$Foreach2item.QUANTITY}}  , PRICE =(select
+                                price* {{$Foreach2item.QUANTITY}} from ITEMS
+                                where POLINE.PRODUCTNAME = ITEMS.PRODUCTNAME)
+                                WHERE PRODUCTNAME =
+                                {{$Foreach2item.PRODUCTNAME}} AND ORDERID =
+                                {{$Request.ORDERID}}
+                        $map: 'http://ibm.com/appconnect/map/v1'
+                        input:
+                          - variable: Foreach2item
+                            $ref: '#/block/For each 2/current-item'
+                          - variable: Request
+                            $ref: '#/trigger/payload'
+                          - variable: JDBCCustomquery5
+                            $ref: >-
+                              #/block/For each 2/node-output/JDBC Custom query
+                              5/response/payload
+                          - variable: JDBCCustomquery8
+                            $ref: >-
+                              #/block/If/node-output/JDBC Custom query
+                              8/response/payload
+                          - variable: JDBCCustomquery
+                            $ref: '#/node-output/JDBC Custom query/response/payload'
+              output-schema: {}
+  name: PurchaseOrderUpsertAPI
+models:
+  PO:
+    name: PO
+    properties:
+      ORDERID:
+        required: false
+        id: true
+        type: number
+      CUSTOMERID:
+        required: false
+        id: false
+        type: string
+      SHIP_METHOD:
+        required: false
+        id: false
+        type: string
+      STATUS:
+        required: false
+        id: false
+        type: string
+      ITEMS:
+        required: false
+        id: false
+        type:
+          - type:
+              PRODUCTNAME:
+                required: false
+                id: false
+                type: string
+              QUANTITY:
+                required: false
+                id: false
+                type: number
+    plural: PO
+    description: ' '
+    operations:
+      create: '#/integration/assemblies/assembly-1'
