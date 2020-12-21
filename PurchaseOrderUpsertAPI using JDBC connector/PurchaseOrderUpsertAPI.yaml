@@ -24,56 +24,48 @@ integration:
       type: api-action
       business-object: jdbc
       connector-type: jdbc
-      account-name: DB2 Client Managed
       actions:
         EXECUTECUSTOMSQL: {}
     action-interface-3:
       type: api-action
       business-object: jdbc
       connector-type: jdbc
-      account-name: DB2 Client Managed
       actions:
         EXECUTECUSTOMSQL: {}
     action-interface-5:
       type: api-action
       business-object: jdbc
       connector-type: jdbc
-      account-name: DB2 Client Managed
       actions:
         EXECUTECUSTOMSQL: {}
     action-interface-6:
       type: api-action
       business-object: jdbc
       connector-type: jdbc
-      account-name: DB2 Client Managed
       actions:
         EXECUTECUSTOMSQL: {}
     action-interface-7:
       type: api-action
       business-object: jdbc
       connector-type: jdbc
-      account-name: DB2 Client Managed
       actions:
         EXECUTECUSTOMSQL: {}
     action-interface-1:
       type: api-action
       business-object: jdbc
       connector-type: jdbc
-      account-name: DB2 Client Managed
       actions:
         EXECUTECUSTOMSQL: {}
     action-interface-4:
       type: api-action
       business-object: jdbc
       connector-type: jdbc
-      account-name: DB2 Client Managed
       actions:
         EXECUTECUSTOMSQL: {}
     action-interface-8:
       type: api-action
       business-object: jdbc
       connector-type: jdbc
-      account-name: DB2 Client Managed
       actions:
         EXECUTECUSTOMSQL: {}
   assemblies:
