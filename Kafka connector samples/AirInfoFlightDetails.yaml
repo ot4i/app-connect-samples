@@ -1,0 +1,48 @@
+$integration: 'http://ibm.com/appconnect/integration/v2/integrationFile'
+integration:
+  type: trigger-action
+  trigger-interfaces:
+    trigger-interface-1:
+      type: event-trigger
+      triggers:
+        CREATED_POLLER:
+          input-context:
+            data: AirInfo__c
+          assembly:
+            $ref: '#/integration/assemblies/assembly-1'
+          options:
+            subscription:
+              createdField: CreatedDate
+              updatedField: LastModifiedDate
+              timeFormat: 'YYYY-MM-DDTHH:mm:ss.SSSZZ'
+              timeZone: UTC
+              pollingInterval: 5
+              isCreatedQueryable: true
+      connector-type: salesforce
+  action-interfaces:
+    action-interface-1:
+      type: api-action
+      business-object: message
+      connector-type: kafka
+      actions:
+        CREATE: {}
+  assemblies:
+    assembly-1:
+      assembly:
+        execute:
+          - create-action:
+              name: Kafka Send message
+              target:
+                $ref: '#/integration/action-interfaces/action-interface-1'
+              map:
+                mappings:
+                  - Payload:
+                      template: >-
+                        [{{$Trigger.Name}}, {{$Trigger.FlightNumber__c}},
+                        {{$Trigger.ArrivalTime__c}},
+                        {{$Trigger.DepartureTime__c}}]
+                  - Topic:
+                      template: eventstream
+                $map: 'http://ibm.com/appconnect/map/v1'
+  name: AirInfoFlightDetails
+models: {}

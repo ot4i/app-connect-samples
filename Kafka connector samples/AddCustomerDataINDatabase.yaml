@@ -1,0 +1,84 @@
+$integration: 'http://ibm.com/appconnect/integration/v2/integrationFile'
+integration:
+  type: trigger-action
+  trigger-interfaces:
+    trigger-interface-1:
+      connector-type: kafka
+      type: event-trigger
+      triggers:
+        CREATED:
+          input-context:
+            data: message
+          assembly:
+            $ref: '#/integration/assemblies/assembly-1'
+          options:
+            parentFilter:
+            subscription: {}
+  action-interfaces:
+    action-interface-1:
+      type: api-action
+      business-object: jdbc
+      connector-type: jdbc
+      actions:
+        EXECUTECUSTOMSQL: {}
+  assemblies:
+    assembly-1:
+      assembly:
+        execute:
+          - parse:
+              name: CSV Parser Parse
+              parse-format: csv
+              source:
+                template: '{{$Trigger.Payload}}'
+                input:
+                  - variable: Trigger
+                    $ref: '#/trigger/payload'
+              sample-data: >-
+                MOBILENUMBER, SUBSCRIBERNAME, SUBSCRIBERADDRESS, ADDONSERVICE,
+                EMERGENCYNUMBER, MOBILEPLAN
+              output-schema:
+                $schema: 'http://json-schema.org/draft-04/schema#'
+                type: array
+                items:
+                  type: object
+                  properties:
+                    field1:
+                      type: string
+                    field2:
+                      type: string
+                    field3:
+                      type: string
+                    field4:
+                      type: string
+                    field5:
+                      type: string
+                    field6:
+                      type: string
+                title: Parsed CSV
+              options:
+                csv-header: false
+          - custom-action:
+              name: JDBC Custom query
+              target:
+                $ref: '#/integration/action-interfaces/action-interface-1'
+              action: EXECUTECUSTOMSQL
+              map:
+                mappings:
+                  - customSql:
+                      format:
+                        type: sql
+                      template: >-
+                        INSERT INTO "MobileCustomerDatabase" (MOBILENUMBER,
+                        SUBSCRIBERNAME, SUBSCRIBERADDRESS, ADDONSERVICE,
+                        EMERGENCYNUMBER, MOBILEPLAN) VALUES (
+                        {{$CSVParserParse.field1}}, {{$CSVParserParse.field2}},
+                        {{$CSVParserParse.field3}}, {{$CSVParserParse.field4}},
+                        {{$CSVParserParse.field5}}, {{$CSVParserParse.field6}})
+                $map: 'http://ibm.com/appconnect/map/v1'
+                input:
+                  - variable: Trigger
+                    $ref: '#/trigger/payload'
+                  - variable: CSVParserParse
+                    $ref: '#/node-output/CSV Parser Parse/response/payload'
+  name: AddCustomerDataINDatabase
+models: {}
