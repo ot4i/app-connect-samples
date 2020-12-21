@@ -1,4 +1,4 @@
-# App Connect Samples for tutorial "Creating an API flow to create SAP OData resources"
+# App Connect Samples for Blog "Using IBM App Connect to interact with Kafka"
 
 Sample code and snippets that are referenced from the Blog [Using IBM App Connect to interact with Kafka](https://community.ibm.com/community/user/middleware/blogs/nidhi-modi1/2020/12/14/using-ibm-app-connect-to-interact-with-kafka?CommunityKey=77544459-9fda-40da-ae0b-fc8c76f0ce18&tab=recentcommunityblogsdashboard)
 
