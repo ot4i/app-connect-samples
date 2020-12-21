@@ -1,4 +1,4 @@
-# App Connect Samples for tutorial "Creating an API flow to create SAP OData resources"
+# App Connect Samples for Blog "Using IBM App Connect in a containerised environment to interact with Java Database Connectivity"
 
 Sample code and snippets that are referenced from the Blog [Using IBM App Connect in a containerised environment to interact with Java Database Connectivity](https://community.ibm.com/community/user/middleware/blogs/ibm-integration-id-team1/2020/10/16/using-jdbc-in-ibm-app-connect?CommunityKey=77544459-9fda-40da-ae0b-fc8c76f0ce18&tab=recentcommunityblogsdashboard)
 
