@@ -1,0 +1,98 @@
+$integration: http://ibm.com/appconnect/integration/v2/integrationFile
+integration:
+  type: trigger-action
+  trigger-interfaces:
+    trigger-interface-1:
+      type: event-trigger
+      triggers:
+        CREATED:
+          input-context:
+            data: message
+          assembly:
+            $ref: '#/integration/assemblies/assembly-1'
+          options:
+            Topic: Leads-value
+            parentFilter:
+              Topic: Leads-value
+            subscription: {}
+          dynamicSchema:
+            id: 11
+            schemaLocation: AVRO_SCHEMA_REGISTRY
+            schemaName: Leads-events
+            schemaRegistryName: default
+            schemaVersion: '1'
+            schema:
+              $schema: http://json-schema.org/draft-04/schema#
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                Title:
+                  type: string
+                Company:
+                  type: string
+                LeadInfo:
+                  type: object
+                  properties:
+                    LeadSource:
+                      type: string
+                    Industry:
+                      type: string
+                    LeadStatus:
+                      type: string
+                    LeadRatings:
+                      type: string
+                  additionalProperties: false
+                  required:
+                    - LeadSource
+                    - Industry
+                    - LeadStatus
+                    - LeadRatings
+              required:
+                - firstName
+                - lastName
+                - Title
+                - Company
+                - LeadInfo
+      connector-type: kafka
+      account-name: kafka_production
+  action-interfaces:
+    action-interface-1:
+      type: api-action
+      business-object: jdbc
+      connector-type: jdbc
+      account-name: db2_production
+      actions:
+        EXECUTECUSTOMSQL: {}
+  assemblies:
+    assembly-1:
+      assembly:
+        execute:
+          - custom-action:
+              name: JDBC Custom query
+              target:
+                $ref: '#/integration/action-interfaces/action-interface-1'
+              action: EXECUTECUSTOMSQL
+              map:
+                mappings:
+                  - customSql:
+                      format:
+                        type: sql
+                      template: >-
+                        insert into APP_CON.SF_LEADS values (
+                        {{$Trigger.Payload.firstName}},
+                        {{$Trigger.Payload.lastName}},
+                        {{$Trigger.Payload.Title}},
+                        {{$Trigger.Payload.Company}},
+                        {{$Trigger.Payload.LeadInfo.LeadSource}},
+                        {{$Trigger.Payload.LeadInfo.Industry}},
+                        {{$Trigger.Payload.LeadInfo.LeadStatus}},
+                        {{$Trigger.Payload.LeadInfo.LeadRatings}})
+                $map: http://ibm.com/appconnect/map/v1
+                input:
+                  - variable: Trigger
+                    $ref: '#/trigger/payload'
+  name: ReadLeadsEventFromKafkaAndWriteToDatabase
+models: {}
