@@ -13,6 +13,9 @@ The intent of these samples is to demonstrate the use of IBM App Connect.  The s
 * [Flight Subscription API](https://github.com/ot4i/app-connect-samples/tree/master/Flight%20Subscription%20API)
 > Sample flow definition file referenced from the tutorial [Creating an API flow to create SAP OData resources](https://developer.ibm.com/integration/docs/app-connect/how-to-guides-for-apps/how-to-use-ibm-app-connect-with-sap/create-api-flow-create-sap-odata-resources/).
 
+* [Kafka Connector Samples](https://github.com/ot4i/app-connect-samples/tree/master/Kafka%20connector%20samples)
+> Sample code and snippets that are referenced from the Blog [Using IBM App Connect to interact with Kafka](https://community.ibm.com/community/user/middleware/blogs/nidhi-modi1/2020/12/14/using-ibm-app-connect-to-interact-with-kafka?CommunityKey=77544459-9fda-40da-ae0b-fc8c76f0ce18&tab=recentcommunityblogsdashboard)
+
 * [SugarCRM retrieve and create sample](https://github.com/ot4i/app-connect-samples/tree/master/eventbrite-sugarcrm)
 > Sample flow definition file referenced from the tutorial [Creating an event-driven flow that adds attendees for an Eventbrite event as SugarCRM leads](https://developer.ibm.com/integration/docs/app-connect/tutorials-for-ibm-app-connect/creating-event-driven-flow-adds-attendees-eventbrite-event-sugarcrm-leads/).
 
