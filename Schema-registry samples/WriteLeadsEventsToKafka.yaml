@@ -1,0 +1,106 @@
+$integration: http://ibm.com/appconnect/integration/v2/integrationFile
+integration:
+  type: trigger-action
+  trigger-interfaces:
+    trigger-interface-1:
+      connector-type: salesforce
+      type: event-trigger
+      triggers:
+        CREATED:
+          input-context:
+            data: Lead
+          assembly:
+            $ref: '#/integration/assemblies/assembly-1'
+          options: {}
+      account-name: salesforce_production
+  action-interfaces:
+    action-interface-1:
+      type: api-action
+      business-object: message
+      connector-type: kafka
+      account-name: kafka_production
+      actions:
+        CREATE: {}
+  assemblies:
+    assembly-1:
+      assembly:
+        execute:
+          - create-action:
+              name: Kafka Send message
+              target:
+                $ref: '#/integration/action-interfaces/action-interface-1'
+              map:
+                mappings:
+                  - Payload:
+                      format:
+                        type: avro
+                        options:
+                          dynamicSchema:
+                            id: 11
+                            schemaLocation: AVRO_SCHEMA_REGISTRY
+                            schemaName: Leads-events
+                            schemaRegistryName: default
+                            schemaVersion: '1'
+                      mappings:
+                        - Company:
+                            template: '{{$Trigger.Company}}'
+                        - LeadInfo:
+                            mappings:
+                              - Industry:
+                                  template: '{{$Trigger.Industry}}'
+                              - LeadRatings:
+                                  template: '{{$Trigger.Rating}}'
+                              - LeadSource:
+                                  template: '{{$Trigger.LeadSource}}'
+                              - LeadStatus:
+                                  template: '{{$Trigger.Status}}'
+                        - Title:
+                            template: '{{$Trigger.Title}}'
+                        - firstName:
+                            template: '{{$Trigger.FirstName}}'
+                        - lastName:
+                            template: '{{$Trigger.LastName}}'
+                  - Topic:
+                      template: Leads-value
+                stringFormatSchemas:
+                  properties.`Payload`:
+                    $schema: http://json-schema.org/draft-04/schema#
+                    type: object
+                    properties:
+                      firstName:
+                        type: string
+                      lastName:
+                        type: string
+                      Title:
+                        type: string
+                      Company:
+                        type: string
+                      LeadInfo:
+                        type: object
+                        properties:
+                          LeadSource:
+                            type: string
+                          Industry:
+                            type: string
+                          LeadStatus:
+                            type: string
+                          LeadRatings:
+                            type: string
+                        additionalProperties: false
+                        required:
+                          - LeadSource
+                          - Industry
+                          - LeadStatus
+                          - LeadRatings
+                    required:
+                      - firstName
+                      - lastName
+                      - Title
+                      - Company
+                      - LeadInfo
+                $map: http://ibm.com/appconnect/map/v1
+                input:
+                  - variable: Trigger
+                    $ref: '#/trigger/payload'
+  name: WriteLeadsEventsToKafka
+models: {}
